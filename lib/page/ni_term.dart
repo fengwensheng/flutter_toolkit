@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'dart:ffi';
@@ -12,10 +11,12 @@ import 'term_func.dart';
 
 class Niterm extends StatefulWidget {
   final String script;
-  const Niterm({Key key, this.script}) : super(key: key);
+  final bool showOnDialog;
+  const Niterm({Key key, this.script, this.showOnDialog = false})
+      : super(key: key);
   static List<int> terms = [];
   static List<int> tmp = []; //这个缓存是为了解决拿到的最后字符不完整
-  static void creatNewTerm() {
+  static void creatNewTerm() async {
     var path = 'libterm.so';
     if (Platform.isMacOS) {
       path =
@@ -51,7 +52,7 @@ class Niterm extends StatefulWidget {
     createSubprocess(
         Utf8.toUtf8(''),
         Utf8.toUtf8('/system/bin/sh'),
-        Utf8.toUtf8('/'),
+        Utf8.toUtf8('/data/data/com.nightmare/files/home'),
         argv,
         envp,
         p,
@@ -74,7 +75,11 @@ class Niterm extends StatefulWidget {
     //只有当为0开头经过二进制转换才小于7位，如果读取到的最后一个字符为0开头，
     //说明这整个UTF8字符占用1个字节，不存在后面还有其他字节没有读取到的情况
     if (units[len - 1].toRadixString(2).length <= 7) {
-      return Utf8Codec().decode(units);
+      try {
+        return Utf8Codec().decode(units, allowMalformed: true);
+      } catch (e) {
+        print(e);
+      }
     } else {
       int number = 0;
       while (true) {
@@ -93,7 +98,7 @@ class Niterm extends StatefulWidget {
           break;
       }
     }
-    return Utf8Codec().decode(units);
+    return Utf8Codec().decode(units, allowMalformed: true);
   }
 
   static exec(String script) {
@@ -117,7 +122,6 @@ class Niterm extends StatefulWidget {
           "/Users/nightmare/Library/Containers/com.nightmareTool/Data/libterm.dylib";
     }
     final dylib = DynamicLibrary.open(path);
-
     final getOutFromFdPointer =
         dylib.lookup<NativeFunction<get_output_from_fd>>('get_output_from_fd');
     GetOutFromFd getOutFromFd = getOutFromFdPointer.asFunction();
@@ -160,6 +164,7 @@ class Niterm extends StatefulWidget {
 }
 
 class _NitermState extends State<Niterm> {
+  bool showOutPut = true;
   int cursor = 0;
   bool isUseCtrl = false;
   List<InlineSpan> listSpan = [];
@@ -167,16 +172,40 @@ class _NitermState extends State<Niterm> {
   String out = "";
   Process process;
   WriteToFd writeToFd;
+  GetOutFromFd getOutFromFd;
+  bool popbool; //禁止返回
   @override
   void initState() {
     super.initState();
     init();
   }
 
+  List listCommond = [
+    "unZipRom",
+    "unZipBrsystem",
+    "sdat2imgsystem",
+    "unZipImgsystem",
+    "unZipBrvendor",
+    "sdat2imgvendor",
+    "unZipImgvendor",
+    "deodexFunc",
+    "deleteAd",
+    "repackImg",
+    "img2sdatsystem",
+    "img2sdatvendor",
+    "unpackBoot",
+    "deleteAvb",
+    "doPermissive",
+    "repackBoot",
+  ];
   ptm() async {}
   init() async {
     //设置so库等的路径
-    print(Niterm.terms);
+    // if (widget.script != null) {
+    //   showOutPut = false;
+    // }
+    popbool = widget.showOnDialog ? false : true;
+    // forcePop=widget.showOnDialog?false;
     var path = 'libterm.so';
     if (Platform.isMacOS) {
       path =
@@ -185,21 +214,62 @@ class _NitermState extends State<Niterm> {
     final dylib = DynamicLibrary.open(path);
     final getOutFromFdPointer =
         dylib.lookup<NativeFunction<get_output_from_fd>>('get_output_from_fd');
-    GetOutFromFd getOutFromFd = getOutFromFdPointer.asFunction();
+    getOutFromFd = getOutFromFdPointer.asFunction();
     final writetofdpointer =
         dylib.lookup<NativeFunction<write_to_fd>>('write_to_fd');
     writeToFd = writetofdpointer.asFunction();
     //如果传进来了自动执行的命令
     if (widget.script != null) {
       Future.delayed(
-        Duration(seconds: 1),
-        () {
-          for (String a in widget.script.split("")) {
-            writeToFd(Niterm.terms.first, Utf8.toUtf8(a));
+        Duration(milliseconds: 0),
+        () async {
+          for (String line in widget.script.trim().split("\n")) {
+            if (!mounted) break;
+            if (line.contains(RegExp("\\[console:.*\\]"))) {
+              //如果是特定字符串需要解析
+              String _exec = line.replaceAll(RegExp("\\[|\\]|console:"), "");
+              writeToFd(Niterm.terms.first, Utf8.toUtf8("echo $_exec\n"));
+              while (!out.contains(_exec)) {
+                await Future.delayed(Duration(milliseconds: 100));
+              }
+              // await functionMap[_exec]();
+            } else {
+              writeToFd(Niterm.terms.first, Utf8.toUtf8(line + "\n"));
+              if (listCommond.contains(line)) {
+                while (true) {
+                  await Future.delayed(Duration(milliseconds: 100));
+                  if (!out.endsWith("\$ ") || !out.endsWith("\# ")) break;
+                }
+                while (true) {
+                  await Future.delayed(Duration(milliseconds: 100));
+                  if (out.endsWith("\$ ") || out.endsWith("\# ")) break;
+                }
+              }
+              if (line == "su")
+                await Future.delayed(Duration(milliseconds: 1000));
+            }
           }
         },
       );
+      // await Future.delayed(Duration(milliseconds: 200));
+      String tmp = ""; //用来累加缓冲前的内容
+      while (mounted && Niterm.terms.isNotEmpty) {
+        Pointer<Uint8> resultPoint = getOutFromFd(Niterm.terms.first);
+        if (resultPoint.address != 0) {
+          print("tmp=====>$tmp");
+          tmp += Niterm.cStringtoString(resultPoint);
+          if (tmp.contains("Nightmare_start")) {
+            out = tmp.replaceAll(
+                RegExp("([\\s\\S]+?).*Nightmare_start|.*Nightmare_start"), "");
+            setState(() {});
+            break;
+          }
+        }
+        free(resultPoint);
+        await Future.delayed(Duration(milliseconds: 0));
+      }
     }
+
     Future.delayed(Duration(seconds: 1), () async {
       while (mounted && Niterm.terms.isNotEmpty) {
         // Utf8.fromUtf8(string)
@@ -216,15 +286,39 @@ class _NitermState extends State<Niterm> {
             //以防万一不能转换
             print("转换出错=====>$e");
           }
-          print("codeUnits===》${result.codeUnits}");
+          print("codeUnits===》${Utf8Codec().encode(result)}");
+          print(result);
           // print();
-          if (result == String.fromCharCodes([8, 32, 8])) {
+          if (result ==
+              Utf8Codec().decode([
+                27,
+                99,
+                27,
+                40,
+                66,
+                27,
+                91,
+                109,
+                27,
+                91,
+                74,
+                27,
+                91,
+                63,
+                50,
+                53,
+                104
+              ])) {
+            out = "";
+            setState(() {});
+          } else if (result == String.fromCharCodes([8, 32, 8])) {
             print("=====>按下删除");
             out = out.substring(0, out.length - 1);
             setState(() {});
           } else {
             if (result.startsWith(String.fromCharCode(8)) &&
-                result[1] != String.fromCharCode(8)) {
+                result[1] != String.fromCharCode(8) &&
+                out.isNotEmpty) {
               out = out.substring(0, out.length - 1);
 
               result = result.replaceFirst(String.fromCharCode(8), "");
@@ -236,9 +330,14 @@ class _NitermState extends State<Niterm> {
               setState(() {});
             }
             if (result == String.fromCharCode(7)) {
-              //没有内容可以删除�������������������������������������，会���������回‘\b’，它提示终端发出蜂鸣的声音以来提示用户
+              //没有内容可以删除时，会输出‘\b’，它提示终端发出蜂鸣的声音以来提示用户
               print("别删了");
-            } else {
+            } else if (showOutPut) {
+              if (result.contains("Nightmare_exit_true")) {
+                result = result.replaceAll("Nightmare_exit_true", "");
+                // showToast2("执行结束");
+                popbool = true;
+              }
               out += result;
               if (mounted) {
                 setState(() {});
@@ -262,6 +361,10 @@ class _NitermState extends State<Niterm> {
   @override
   void dispose() {
     print("Niterm被销毁");
+    writeToFd(Niterm.terms.first, Utf8.toUtf8(String.fromCharCode(3)));
+    Future.delayed(Duration(seconds: 1), () {
+      getOutFromFd(Niterm.terms.first);
+    });
     super.dispose();
   }
 
@@ -302,6 +405,13 @@ class _NitermState extends State<Niterm> {
                   color: Colors.lightBlue,
                   decoration: TextDecoration.none,
                 )),
+          );
+        else if (colorNumber == "31m")
+          listSpan.add(
+            TextSpan(
+              text: a.replaceAll(header, ""),
+              style: textStyle.copyWith(color: Color(0xffff0000)),
+            ),
           );
         else if (colorNumber == "32m")
           listSpan.add(
@@ -386,14 +496,30 @@ class _NitermState extends State<Niterm> {
     //     style: textStyle.copyWith(backgroundColor: Colors.grey),
     //   ),
     // );
-    return MaterialApp(
-      home: WillPopScope(
-        child: Scaffold(
-          resizeToAvoidBottomPadding: true,
+    return WillPopScope(
+      onWillPop: () async {
+        if (!popbool) {
+          // showToast2("返回键已拦截，请等待释放");
+        }
+        return popbool;
+      },
+      child: MaterialApp(
+        home: Scaffold(
+          // appBar: AppBar(
+          //   title: Text("Niterm"),
+          // ),
+          resizeToAvoidBottomPadding: widget.showOnDialog ? false : true,
           backgroundColor: Colors.black,
           body: Stack(
             alignment: Alignment.center,
             children: <Widget>[
+              Align(
+                alignment: Alignment.topCenter,
+                child: Text(
+                  "Niterm",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
               buildSafeArea(context),
               SafeArea(
                 child: Align(
@@ -406,7 +532,7 @@ class _NitermState extends State<Niterm> {
                       children: <Widget>[
                         InkWell(
                           onTap: () {
-                            writeToFd(Niterm.terms.first, Utf8.toUtf8("\b"));
+                            Navigator.of(context).pop();
                             setState(() {});
                           },
                           child: SizedBox(
@@ -481,9 +607,6 @@ class _NitermState extends State<Niterm> {
             ],
           ),
         ),
-        onWillPop: () async {
-          return true;
-        },
       ),
     );
   }
@@ -544,12 +667,8 @@ class _NitermState extends State<Niterm> {
             cacheExtent: 10000,
             padding: EdgeInsets.only(left: 2, bottom: 0.0, top: 0.0),
             children: <Widget>[
-              Text("啊啊啊",
-                  style: TextStyle(
-                      color: Colors.white, backgroundColor: Colors.red)),
               RichText(
                 text: TextSpan(
-                  text: "",
                   style: TextStyle(
                     color: Colors.white,
                   ),
@@ -568,13 +687,14 @@ class _NitermState extends State<Niterm> {
                 height: 4.0,
                 child: TextField(
                   controller: editingController,
-                  autofocus: true,
+                  autofocus: widget.showOnDialog ? false : true,
                   keyboardType: TextInputType.text,
                   focusNode: focusNode,
                   style: TextStyle(color: Colors.transparent),
                   cursorColor: Colors.transparent,
                   showCursor: true,
                   cursorWidth: 0,
+                  
                   scrollPadding: EdgeInsets.all(0.0),
                   enableInteractiveSelection: false,
                   decoration: InputDecoration(

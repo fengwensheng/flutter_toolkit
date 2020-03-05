@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'page/ni_term.dart';
-import 'terminal.dart';
 
 void main(){
   Niterm.creatNewTerm();

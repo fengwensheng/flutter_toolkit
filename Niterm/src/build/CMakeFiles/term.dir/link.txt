@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC   -shared -Wl,-soname,libterm.so -o libterm.so CMakeFiles/term.dir/term.c.o 

@@ -1,0 +1,34 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/nightmare/文档/Flutter_Project/flutter_toolkit/Niterm/src/term.c
+dirent.h
+-
+fcntl.h
+-
+signal.h
+-
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+sys/ioctl.h
+-
+sys/wait.h
+-
+termios.h
+-
+unistd.h
+-
+term.h
+/home/nightmare/文档/Flutter_Project/flutter_toolkit/Niterm/src/term.h
+
+/home/nightmare/文档/Flutter_Project/flutter_toolkit/Niterm/src/term.h
+

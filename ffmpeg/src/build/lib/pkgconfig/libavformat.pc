@@ -1,0 +1,14 @@
+prefix=/home/nightmare/文档/Android_Project/ffmpeg-3.3.6/android/linux
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libavformat
+Description: FFmpeg container format library
+Version: 57.71.100
+Requires: 
+Requires.private: libavcodec >= 57.89.100, libswresample >= 2.7.100, libavutil >= 55.58.100
+Conflicts:
+Libs: -L${libdir}  -lavformat 
+Libs.private: -lXv -lX11 -lXext -ldl -ldl -lvdpau -lva -lva-x11 -lX11 -lva -lva-drm -lva -lxcb -lxcb-shm -lxcb-xfixes -lxcb-shape -ljack -lasound -pthread -lSDL2 -lm -llzma -lbz2 -lz -pthread
+Cflags: -I${includedir}

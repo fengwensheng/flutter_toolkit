@@ -1,0 +1,100 @@
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterRoot = localProperties.getProperty('flutter.sdk')
+if (flutterRoot == null) {
+    throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
+}
+
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
+}
+
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = '1.0'
+}
+
+apply plugin: 'com.android.application'
+apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
+
+android {
+    compileSdkVersion 29
+//    sourceSets {
+//        main {
+//            jniLibs.srcDirs = ['libs']
+//        }
+//    }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+
+    defaultConfig {
+        applicationId "com.nightmare"
+        minSdkVersion 16
+        targetSdkVersion 28
+        multiDexEnabled true
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+                cppFlags "-frtti -fexceptions"
+                abiFilters "arm64-v8a"
+            }
+        }
+        ndk{
+            abiFilters "arm64-v8a"
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.10.2"
+        }
+    }
+    buildTypes {
+        release {
+            ndk {
+                //abiFilters "armeabi-v7a"
+//                abiFilters "arm64-v8a"
+            }
+            signingConfig signingConfigs.debug
+            minifyEnabled false
+        }
+        debug {
+            ndk {
+                abiFilters "armeabi-v7a"
+                abiFilters "arm64-v8a"
+                abiFilters "x86"
+            }
+            signingConfig signingConfigs.debug
+            minifyEnabled false
+        }
+    }
+    useLibrary 'org.apache.http.legacy'
+}
+
+flutter {
+    source '../..'
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar','*.aar'])
+    implementation 'com.android.support:multidex:1.0.3'
+    implementation 'org.smali:smali:2.3.1'
+    implementation 'org.smali:baksmali:2.3.1'
+    implementation 'xmlunit:xmlunit:1.6'
+    implementation 'org.yaml:snakeyaml:1.18:android'
+    //noinspection GradleDependency
+    implementation 'com.google.guava:guava:14.0'
+    implementation 'commons-cli:commons-cli:1.4'
+    implementation 'commons-io:commons-io:2.4'
+    implementation 'org.apache.commons:commons-lang3:3.1'
+}

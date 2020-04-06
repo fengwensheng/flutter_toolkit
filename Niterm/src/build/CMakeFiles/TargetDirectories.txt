@@ -1,0 +1,3 @@
+/home/nightmare/文档/Flutter_Project/flutter_toolkit/Niterm/src/build/CMakeFiles/rebuild_cache.dir
+/home/nightmare/文档/Flutter_Project/flutter_toolkit/Niterm/src/build/CMakeFiles/term.dir
+/home/nightmare/文档/Flutter_Project/flutter_toolkit/Niterm/src/build/CMakeFiles/edit_cache.dir

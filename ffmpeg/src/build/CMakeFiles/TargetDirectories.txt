@@ -1,0 +1,3 @@
+/home/nightmare/文档/Flutter_Project/flutter_toolkit/ffmpeg/src/build/CMakeFiles/rebuild_cache.dir
+/home/nightmare/文档/Flutter_Project/flutter_toolkit/ffmpeg/src/build/CMakeFiles/native-lib.dir
+/home/nightmare/文档/Flutter_Project/flutter_toolkit/ffmpeg/src/build/CMakeFiles/edit_cache.dir

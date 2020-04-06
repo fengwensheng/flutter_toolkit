@@ -1,0 +1,29 @@
+<shortcuts xmlns:tools="http://schemas.android.com/tools"
+           xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <shortcut
+        android:shortcutId="new_session"
+        android:enabled="true"
+        android:icon="@drawable/ic_launcher"
+        android:shortcutShortLabel="@string/file_manager"
+        tools:targetApi="n_mr1">
+        <intent
+            android:action="android.intent.action.RUN"
+            android:targetPackage="com.nightmare"
+            android:targetClass="com.nightmare.MainActivity"/>
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="new_failsafe_session"
+        android:enabled="true"
+        android:icon="@drawable/ic_launcher"
+        android:shortcutShortLabel="@string/file_manager"
+        tools:targetApi="n_mr1">
+        <intent
+            android:action="android.intent.action.RUN"
+            android:targetPackage="com.nightmare"
+            android:targetClass="com.nightmare.FileManager">
+        </intent>
+    </shortcut>
+
+</shortcuts>

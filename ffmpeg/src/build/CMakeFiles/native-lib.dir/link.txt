@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC   -shared -Wl,-soname,libnative-lib.so -o lib/libnative-lib.so CMakeFiles/native-lib.dir/native-lib.cpp.o  -Wl,-rpath,./lib ./lib/libavcodec-57.so ./lib/libavdevice-57.so ./lib/libavfilter-6.so ./lib/libavformat-57.so ./lib/libavutil-55.so ./lib/libswresample-2.so ./lib/libswscale-4.so ./lib/libpostproc-54.so 

@@ -42,7 +42,7 @@ Language: English | [中文简体](README.md)
 
 ### 1. Why isn't it fully open source?
 
-Time is not divided over, except Rom pages are open source.
+I didn't has so much time, except Rom pages are open source.
 
 ### 2.Why is there so much junk code in the project?
 

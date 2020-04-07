@@ -37,7 +37,6 @@ Language: English | [中文简体](README.md)
 - [x] Terminal
 - [ ] Shadow screenshots
 - [ ] OTG-Flash
-- [ ] 
 - [ ] NiSSH
 ##  The problem?
 

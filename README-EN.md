@@ -1,43 +1,64 @@
 # flutter_toolkit
 
-## 介绍
+Language: English | [中文简体](README.md)
 
-这是一个使用Flutter编写的工具箱，其中的少量功能目前也能在mac/linux工作，致力于打造全平台的工具箱
+## introduction
 
-## 功能列表
 
-- 常用功能(开启远程ADB调试，查看WIFI密码，电量伪装，MAC地址修改...)
-- 文件管理器(能同时运行在Android/Linux/Mac的文件管理器，已具有简单的功能，并集成Apktool)
-- ROM工具(能够处理Android ROM的工具，该页面不开源)
-- 远程控制(能够控制局域网内的其他安卓设备，并实时投屏，目前该功能仍有缺陷)
-- Niterm(一个终端模拟器，使用传统终端的思路创建)
-- 应用管理(开发中...)
-- 阴影截屏(能够生成已有截图的阴影截屏，将来或将支持带壳截屏)
-- 数据线刷机(能够通过数据线给另一部安卓手机刷机，原理已经实现，但无时间维护)
-- NiSSH(类似于JuiceSSH，win端的Xshell)
+- this is a toolkit developed by Flutter, and a few of its functions can also work on MAC/Linux at present. It is dedicated to building a full-platform toolbox, hoping to integrate all the functions that can be summarized into tools with minimal code, which is also the author's initial intention.
+- As a result of learning about Flutter and as a tool to constantly improve myself by writing code.
 
-## 下载使用
-[酷安](https://www.coolapk.com/apk/com.nightmare)
-## 已开源列表
-- [ ] 常用功能
-- [x] 文件管理器
-- [ ] 远程工具
-- [x] 终端模拟器
-- [ ] 阴影截屏
-- [ ] 数据线刷机
+## Feature list
+
+- common functions (open remote ADB debugging, view WIFI password, battery level camouflage, MAC address modification...)
+- file manager (can run on Android/Linux/Mac at the same time file manager, has simple functions, and integration with Apktool)
+
+-rom tools (tools that can handle Android ROM, this page is not open source)
+
+- remote control (capable of controlling other android devices in the LAN and real-time screen projection, which is still defective)
+
+- Niterm(a terminal emulator, created using traditional terminal ideas)
+
+- application management (under development...)
+
+- shadow screenshots (can generate shadow screenshots of existing screenshots, or will support screenshots with shells in the future)
+
+- data line swiper (can swiper another android phone through the data line, the principle has been realized, but there is no time to maintain)
+
+- nissh (similar to JuiceSSH, Windows Xshell)
+
+## Download
+[from coolapk](https://www.coolapk.com/apk/com.nightmare)
+
+## Open source list
+- [ ] CommonTool
+- [x] FileManager
+- [ ] RemoteController
+- [x] Terminal
+- [ ] Shadow screenshots
+- [ ] OTG-Flash
+- [ ] 
 - [ ] NiSSH
-## 目前的问题
-项目中存在一些垃圾代码，如果你看到类似于```int a``` ```Widget a``` 类似的代码，如果你看到了，你可以在issue中提示我优化，
+##  The problem?
 
-## 问题？
+### 1. Why isn't it fully open source?
 
-### 1.为什么还没有完全开源
+Time is not divided over, except Rom pages are open source.
 
-时间没有分过来，除Rom页面都是会开源的。
+### 2.Why is there so much junk code in the project?
 
-### 2.为什么项目中有那么多的垃圾代码
+In the early stage of the project (in the first semester of the freshman year), the author wrote some junk code. Till now, the whole project has more than 1w lines of code, but there are still some early codes left, and the author did not pay attention to which parts of the code he left unintentionally.
 
-项目
+I'll be very careful what I write next
 
-## 打算
+If you see code like ```int a``` , ```Widget a``` , you can open a issue and i'll fix it.
 
+### 3. Will I continue to maintain it?
+
+I'll be maintaining the toolkit, fixing existing bugs, and developing new features until I get to work (two years from now), which is a huge drain on my free time. I'd appreciate it if you could contribute to the repository!
+
+
+
+## At the last
+
+Under the pressure of life, my time will be abnormal pressing, there are other projects need I take the time to complete, is currently the ordinary university sophomore, so the school also will give me a lot of time overhead, the development of the toolkit also paid a lot of time in my university, although the optimized place too much, but I still will be open source, hope there is place for everyone to use, some of which I have the optimization of the existing problems, hope after I can spare more time to optimize.

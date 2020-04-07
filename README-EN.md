@@ -13,7 +13,7 @@ Language: English | [中文简体](README.md)
 - common functions (open remote ADB debugging, view WIFI password, battery level camouflage, MAC address modification...)
 - file manager (can run on Android/Linux/Mac at the same time file manager, has simple functions, and integration with Apktool)
 
--rom tools (tools that can handle Android ROM, this page is not open source)
+- rom tools (tools that can handle Android ROM, this page is not open source)
 
 - remote control (capable of controlling other android devices in the LAN and real-time screen projection, which is still defective)
 

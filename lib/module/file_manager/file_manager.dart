@@ -329,9 +329,7 @@ class _FiMaHomeState extends State<FiMaHome> with TickerProviderStateMixin {
                     child: Transform(
                       transform: matrix4,
                       alignment: Alignment.center,
-                      child: Hero(
-                        tag: "FM$currentPage",
-                        child: FileClipRRect(
+                      child:FileClipRRect(
                           child: FMPage(
                             // key: GlobalKey(),
                             pathCallBack: (String path) async {
@@ -343,7 +341,6 @@ class _FiMaHomeState extends State<FiMaHome> with TickerProviderStateMixin {
                             initpath: _paths[index],
                           ),
                         ),
-                      ),
                     ),
                   );
                 },

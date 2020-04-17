@@ -1,34 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_icons/flutter_icons.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:flutter_toolkit/module/file_manager/io/file_entity.dart';
 
+import 'io/file.dart';
+import 'widgets/item_imgheader.dart';
 
-Widget getWidgetFromExtension(String fileName, String path,
+Widget getWidgetFromExtension(
+    FileEntity fileNode, BuildContext context,
     [bool isFile = true]) {
   if (isFile) {
-    if (fileName.endsWith(".zip"))
-      return Icon(
-        Octicons.getIconData("file-zip"),
+    if (fileNode.nodeName.endsWith(".zip"))
+      return SvgPicture.asset(
+        "assets/icon/zip.svg",
+        width: 20.0,
+        height: 20.0,
+        color: Theme.of(context).iconTheme.color,
       );
-    else if (fileName.endsWith(".apk"))
+    else if (fileNode.nodeName.endsWith(".apk"))
       return Icon(
         Icons.android,
       );
-    else if (fileName.endsWith(".mp4"))
+    else if (fileNode.nodeName.endsWith(".mp4"))
       return Icon(
         Icons.video_library,
       );
-    else if (fileName.endsWith(".jpg") || fileName.endsWith(".png")) {
-      // return Imagefile(
-      //   path: path,
-      // );
-    } else
-      return Icon(
-        Octicons.getIconData("file"),
+    else if (fileNode.nodeName.endsWith(".jpg") || fileNode.nodeName.endsWith(".png")) {
+      return ItemImgHeader(
+        fileNode: fileNode,
       );
-      return Text("");
+    } else
+      return SvgPicture.asset(
+        "assets/icon/file.svg",
+        width: 20.0,
+        height: 20.0,
+      );
   } else {
-    return Icon(
-      Octicons.getIconData("file-directory"),
+    return SvgPicture.asset(
+      "assets/icon/directory.svg",
+      width: 20.0,
+      height: 20.0,
+      color: Theme.of(context).iconTheme.color,
     );
   }
 }

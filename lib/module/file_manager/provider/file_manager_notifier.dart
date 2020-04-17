@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_toolkit/module/file_manager/model/file_node.dart';
+import 'package:flutter_toolkit/module/file_manager/io/file_entity.dart';
 
 enum ClipType {
   Cut,
@@ -7,16 +7,16 @@ enum ClipType {
 }
 
 class FiMaPageNotifier extends ChangeNotifier {
-  List<FileNode> checkNodes = [];
+  List<FileEntity> checkNodes = [];
   List<String> _clipboard = [];
   ClipType _clipType;
   ClipType get clipType => _clipType;
   List<String> get clipboard => _clipboard;
-  addCheck(FileNode fileNode) {
+  addCheck(FileEntity fileNode) {
     checkNodes.add(fileNode);
   }
 
-  removeCheck(FileNode fileNode) {
+  removeCheck(FileEntity fileNode) {
     checkNodes.remove(fileNode);
   }
   removeAllCheck() {

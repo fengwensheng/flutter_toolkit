@@ -6,8 +6,9 @@ import 'package:flutter_toolkit/main.dart';
 import 'package:flutter_toolkit/module/file_manager/dialog/apk_tool_decode.dart';
 import 'package:flutter_toolkit/module/file_manager/dialog/apktool_encode.dart';
 import 'package:flutter_toolkit/module/file_manager/dialog/long_press.dart';
-import 'package:flutter_toolkit/module/file_manager/model/file_node.dart';
-import 'package:flutter_toolkit/module/file_manager/model/file_type.dart';
+import 'package:flutter_toolkit/module/file_manager/io/directory.dart';
+import 'package:flutter_toolkit/module/file_manager/io/file.dart';
+import 'package:flutter_toolkit/module/file_manager/io/file_entity.dart';
 import 'package:flutter_toolkit/module/file_manager/provider/file_manager_notifier.dart';
 import 'package:flutter_toolkit/utils/global_function.dart';
 import 'package:flutter_toolkit/utils/platform_channel.dart';
@@ -50,7 +51,7 @@ class FMPage extends StatefulWidget {
 
 class _FMPageState extends State<FMPage> with TickerProviderStateMixin {
   String _currentdirectory = ""; //当前所在的文件夹
-  List<FileNode> _fileNodes = []; //保存所有文件的节点
+  List<FileEntity> _fileNodes = []; //保存所有文件的节点
   // List<FileSystemEntity> _list1;
   ScrollController _scrollController = ScrollController(); //列表滑动控制器
   AnimationController _animationController; //动画控制器，用来控制文件夹进入时的透明度
@@ -126,106 +127,14 @@ class _FMPageState extends State<FMPage> with TickerProviderStateMixin {
   }
 
   _getFileNodes(String path, {Function afterSort}) async {
-    String lsPath;
-    if (Platform.isAndroid)
-      lsPath = "/system/bin/ls";
-    else
-      lsPath = "ls";
-    int _startIndex;
-    List<String> _fullmessage = [];
-    path = path.replaceAll("//", "/");
-    // print("刷新的路径=====>>$path");
-    _fileNodes.clear();
-    _fullmessage = (await CustomProcess.exec("$lsPath -aog '$path'\n"))
-        .split("\n")
-          ..removeAt(0);
-    String b = "";
-    for (int i = 0; i < _fullmessage.length; i++) {
-      if (_fullmessage[i].startsWith("l")) {
-        //说明这个节点是符号链接
-        if (_fullmessage[i].split(" -> ").last.startsWith("/")) {
-          //首先以 -> 符号分割开，last拿到的是该节点链接到的那个元素
-          //如果这个元素不是以/开始，则该符号链接使用的是相对链接
-          b += _fullmessage[i].split(" -> ").last + "\n";
-        } else {
-          b += "$path/${_fullmessage[i].split(" -> ").last}\n";
-        }
-      }
-    }
-    // print("======>$b");
-    if (b.isNotEmpty) {
-      //-g取消打印owner  -0取消打印group   -L不跟随符号链接，会指向整个符号链接最后指向的那个
-      List<String> linkFileNodes =
-          (await CustomProcess.exec("echo '$b'|xargs $lsPath -ALdog\n"))
-              .replaceAll("//", "/")
-              .split("\n");
-
-      print("linkFileNodes=====>$linkFileNodes");
-      Map<String, String> map = Map();
-      for (String str in linkFileNodes) {
-        // print(str);
-        map[str.replaceAll(RegExp(".*[0-9] "), "")] = str.substring(0, 1);
-      }
-      print(map);
-      for (int i = 0; i < _fullmessage.length; i++) {
-        if (_fullmessage[i].startsWith("l") &&
-            map.keys.contains(_fullmessage[i].split(" -> ").last)) {
-          print(_fullmessage[i]);
-          _fullmessage[i] = _fullmessage[i].replaceAll(
-              RegExp("^l"), map[_fullmessage[i].split(" -> ").last]);
-          // f.remove(f.first);
-        }
-      }
-      File("/sdcard/MToolkit/日志文件夹/自定义日志.txt")
-          .writeAsString(_fullmessage.join("\n"));
-    }
-    // DateTime three = DateTime.now();
-    // print("得到最终的文件列表信息耗时===>>${three.difference(two)}");
-
-    // _fullmessage..toString().re
-    _fullmessage.removeWhere((a) {
-      //查找.这个所在的行数
-      return a.endsWith(" .");
-    });
-    int currentIndex = _fullmessage.indexWhere((a) {
-      return a.endsWith(" ..");
-    });
-    _startIndex = _fullmessage[currentIndex].indexOf(".."); //获取文件名开始的地址
-    // print("startIndex===>>>$_startIndex");
-    if (path == "/") {
-      //如果当前路径已经是/就不需要再加一个/了
-      for (int i = 0; i < _fullmessage.length; i++) {
-        FileNode _fileNode = FileNode(
-            "$path" + _fullmessage[i].substring(_startIndex),
-            _fullmessage[i].startsWith(RegExp("-|l")),
-            _fullmessage[i]);
-        _fileNodes.add(_fileNode);
-      }
-    } else {
-      for (int i = 0; i < _fullmessage.length; i++) {
-        FileNode _fileNode = FileNode(
-            "$path/" + _fullmessage[i].substring(_startIndex),
-            _fullmessage[i].startsWith(RegExp("-|l")),
-            _fullmessage[i]);
-        _fileNodes.add(_fileNode);
-      }
-    }
-    _fileNodes.sort((a, b) => fileNodeCompare(a, b));
+    _fileNodes = await NiDirectory(path).listAndSort();
+    setState(() {});
     getNodeFullArgs();
     if (afterSort != null) afterSort();
     if (widget.pathCallBack != null) widget.pathCallBack(path); //返回当前的路径
   }
 
-  /* */
-//文件节点的比较，文件夹在上面
-  int fileNodeCompare(FileNode a, FileNode b) {
-    //在遵循文件夹在上的条件下且按文件名排序
-    if (a.isFile && !b.isFile) return 1;
-    if (!a.isFile && b.isFile) return -1;
-    return a.path.toLowerCase().compareTo(b.path.toLowerCase());
-  }
-
-  itemOnTap(FileNode fileNode) {
+  itemOnTap(FileEntity fileNode) {
     if (fileNode.nodeName == "..") {
       //清除所有已选择
       fiMaPageNotifier.removeAllCheck();
@@ -255,125 +164,53 @@ class _FMPageState extends State<FMPage> with TickerProviderStateMixin {
     } else if (widget.chooseFile) {
       widget.callback("$_currentdirectory/${fileNode.nodeName}");
     } else {
-      print(FileType.isText(fileNode));
-      if (FileType.isText(fileNode)) {
+      // print(FileType.isText(fileNode));
+      if (FileEntity.isText(fileNode)) {
         Navigator.of(context).push(MaterialPageRoute(builder: (c) {
           return TextEdit(
             fileNode: fileNode,
           );
         }));
       }
-      // if (type == "mp4") {
-      //   Navigator.of(context).push(MaterialPageRoute(builder: (c) {
-      //     return VideoPlay(
-      //       filePath: fileNode.path,
-      //     );
-      //   }));
-      // }
-      // if (type == "apk") {
-      //   showCustomDialog(
-      //       context,
-      //       const Duration(milliseconds: 200),
-      //       490 * 2.75 / window.devicePixelRatio,
-      //       DecompileDex(
-      //         initindex: 1,
-      //         parentpath: _currentdirectory,
-      //         title: fileNode.nodeName,
-      //         file: getfilePath(widget.fileNode.path),
-      //         callback: () async {
-      //           sort(
-      //             _currentdirectory,
-      //             afterSort: () {
-      //               _animationController.reset();
-      //               _animationController.forward();
-      //             },
-      //           );
-      //         },
-      //       ),
-      //       true,
-      //       true,
-      //       "apk");
-      // }
-      // if (type == "dex" || type == "odex") {
-      //   showCustomDialog(
-      //       context,
-      //       const Duration(milliseconds: 200),
-      //       220 * 2.75 / window.devicePixelRatio,
-      //       DecompileDex(
-      //         initindex: 0,
-      //         parentpath: _currentdirectory,
-      //         title: currentfile,
-      //         file: getfilePath(widget.fileNode.path),
-      //         callback: () async {
-      //           sort(
-      //             _currentdirectory,
-      //             afterSort: () {
-      //               _animationController.reset();
-      //               _animationController.forward();
-      //             },
-      //           );
-      //         },
-      //       ),
-      //       true);
-      // }
-      // if (texttype.contains(type)) {
-      //   Navigator.push(
-      //     context,
-      //     PageRouteBuilder(
-      //       pageBuilder: (context, _, __) {
-      //         // return TextEdit(
-      //         //   filename: currentfile,
-      //         //   path: getfilePath(widget.fileNode.path),
-      //         // );
-      //       },
-      //       transitionDuration: const Duration(milliseconds: 600),
-      //       transitionsBuilder: (_, animation, __, child) {
-      //         return FadeTransition(
-      //           opacity: animation,
-      //           child: FadeTransition(
-      //             opacity: Tween(begin: 0.0, end: 1.0).animate(animation),
-      //             child: child,
-      //           ),
-      //         );
-      //       },
-      //     ),
-      //   );
-      // }
-      // if (imagetype.contains(type)) {
-      //   List _imagelist = [];
-      //   for (FileNode _file in _fileNodes) {
-      //     if (imagetype.contains(getfilePath(widget.fileNode.path)
-      //         .replaceAll(RegExp(".*\\."), ""))) {
-      //       _imagelist.add(_file);
-      //     }
-      //   }
-      //   PageController controller = PageController(
-      //       initialPage:
-      //           _imagelist.indexOf(getfilePath(widget.fileNode.path)));
-      //   Navigator.of(context).push(
-      //     MaterialPageRoute(
-      //       builder: (_) {
-      //         return Hero(
-      //           tag: currentfile,
-      //           child: PageView.builder(
-      //             controller: controller,
-      //             itemCount: _imagelist.length,
-      //             itemBuilder: (BuildContext context, int index) {
-      //               return Image.file(
-      //                 File(_imagelist[index]),
-      //                 //mode: ExtendedImageMode.Gesture,
-      //               );
-      //             },
-      //           ),
-      //         );
-      //       },
-      //     ),
-      //   );
-      // }
+
+      if (FileEntity.isImg(fileNode)) {
+        print("object");
+        List<FileEntity> _imagelist = [];
+        for (FileEntity _file in _fileNodes) {
+          if (FileEntity.isImg(_file)) {
+            _imagelist.add(_file);
+          }
+        }
+        PageController controller =
+            PageController(initialPage: _imagelist.indexOf(fileNode));
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) {
+              return Hero(
+                tag: fileNode.path,
+                child: PageView.builder(
+                  controller: controller,
+                  itemCount: _imagelist.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return Container(
+                      color: Colors.black,
+                      child: Image.file(
+                        File(_imagelist[index].path),
+                        //mode: ExtendedImageMode.Gesture,
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        );
+      }
     }
   }
 
-  itemOnLongPress(String currentFile, FileNode fileNode, BuildContext context) {
+  itemOnLongPress(
+      String currentFile, FileEntity fileNode, BuildContext context) {
     if (currentFile != "..") {
       int initpage0 = 0;
       int initpage1 = 0;
@@ -405,7 +242,7 @@ class _FMPageState extends State<FMPage> with TickerProviderStateMixin {
   //这是一个异步方法，来获得文件节点的其他参数
   //
   void getNodeFullArgs() async {
-    for (FileNode fileNode in _fileNodes) {
+    for (FileEntity fileNode in _fileNodes) {
       //将文件的ls输出详情以空格隔开分成列表
       if (fileNode.nodeName != "..") {
         List<String> infos = fileNode.fullInfo.split(RegExp(r"\s{1,}"));
@@ -539,7 +376,7 @@ class _FMPageState extends State<FMPage> with TickerProviderStateMixin {
 }
 
 class FileItem extends StatefulWidget {
-  final FileNode fileNode;
+  final FileEntity fileNode;
   final Function onTap;
   final Function onLongPress;
   final Function apkTool;
@@ -633,7 +470,10 @@ class _FileItemState extends State<FileItem>
     String currentFile = _tmp.first.split("/").last; //取前面那个就没错
     // /bin -> /system/bin
     Widget _iconData = getWidgetFromExtension(
-        currentFile, widget.fileNode.path, widget.fileNode.isFile); //显示的头部件
+      widget.fileNode,
+      context,
+      widget.fileNode.isFile,
+    ); //显示的头部件
     return Container(
       height: 54,
       child: Stack(
@@ -667,9 +507,7 @@ class _FileItemState extends State<FileItem>
                 transform: Matrix4.identity()..translate(dx),
                 child: Padding(
                   padding: EdgeInsets.only(left: 5),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Stack(
                     children: <Widget>[
                       Row(
                         children: <Widget>[
@@ -683,14 +521,14 @@ class _FileItemState extends State<FileItem>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               SizedBox(
-                                // width: MediaQuery.of(context).size.width - 35,
+                                width: MediaQuery.of(context).size.width - 35,
                                 child: Text(
-                                    currentFile,
-                                    maxLines: 1,
-                                    softWrap: false,
-                                    overflow: TextOverflow.fade,
-                                    style: TextStyle(color: Colors.black),
-                                  ),
+                                  currentFile,
+                                  maxLines: 1,
+                                  softWrap: false,
+                                  overflow: TextOverflow.fade,
+                                  style: TextStyle(color: Colors.black),
+                                ),
                               ),
                               Text(
                                 "${widget.fileNode.modified}  ${widget.fileNode.itemsNumber}  ${widget.fileNode.size}  ${widget.fileNode.mode}",
@@ -706,37 +544,48 @@ class _FileItemState extends State<FileItem>
                       ),
                       if (widget.fileNode.nodeName.endsWith("_src") &&
                           widget.fileNode.isDirectory)
-                        IconButton(
-                          icon: Icon(Icons.build),
-                          onPressed: () {
-                            showCustomDialog2(
-                              isPadding: false,
-                              context: context,
-                              duration: Duration(milliseconds: 200),
-                              child: FullHeightListView(
-                                child: ApkToolEncode(fileNode: widget.fileNode),
-                              ),
-                            );
-                          },
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: IconButton(
+                            icon: Icon(Icons.build),
+                            onPressed: () {
+                              showCustomDialog2(
+                                isPadding: false,
+                                context: context,
+                                duration: Duration(milliseconds: 200),
+                                child: FullHeightListView(
+                                  child:
+                                      ApkToolEncode(fileNode: widget.fileNode),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       if (widget.fileNode.nodeName.endsWith("apk"))
-                        IconButton(
-                          icon: Icon(Icons.build),
-                          onPressed: () {
-                            showCustomDialog2(
-                              isPadding: false,
-                              context: context,
-                              duration: Duration(milliseconds: 200),
-                              child: FullHeightListView(
-                                child: ApkToolDialog(fileNode: widget.fileNode),
-                              ),
-                            );
-                          },
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: IconButton(
+                            icon: Icon(Icons.build),
+                            onPressed: () {
+                              showCustomDialog2(
+                                isPadding: false,
+                                context: context,
+                                duration: Duration(milliseconds: 200),
+                                child: FullHeightListView(
+                                  child:
+                                      ApkToolDialog(fileNode: widget.fileNode),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       if (_tmp.length == 2)
-                        Text(
-                          "->    ",
-                          style: TextStyle(color: Colors.black),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            "->    ",
+                            style: TextStyle(color: Colors.black),
+                          ),
                         ),
                     ],
                   ),

@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:flutter_toolkit/model/toolkit_info.dart';
+import 'package:flutter_toolkit/module/file_manager/io/file.dart';
+import 'package:flutter_toolkit/module/file_manager/io/file_entity.dart';
 import 'package:flutter_toolkit/module/file_manager/provider/file_manager_notifier.dart';
 import 'package:flutter_toolkit/utils/global_function.dart';
 import 'package:flutter_toolkit/utils/process.dart';
@@ -13,10 +15,9 @@ import 'package:flutter_toolkit/widgets/public_widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../colors/file_colors.dart';
-import '../model/file_node.dart';
 
 class LongPressDialog extends StatefulWidget {
-  final FileNode fileNode;
+  final FileEntity fileNode;
   final int initpage0; //显示特殊列表还是普通
   final int initpage1; //显示特殊列表中的某一个
   final callback;
@@ -162,9 +163,11 @@ class _LongPressDialogState extends State<LongPressDialog> {
             children: <Widget>[
               Padding(
                 padding: EdgeInsets.only(left: 4.0, right: 4.0),
-                child: Icon(
-                  Octicons.getIconData("alert"),
-                  size: 16.0,
+                child: SvgPicture.asset(
+                  "assets/icon/alert.svg",
+                  width: 20.0,
+                  height: 20.0,
+                  color: Theme.of(context).iconTheme.color,
                 ),
               ),
               Text(
@@ -195,7 +198,7 @@ class _LongPressDialogState extends State<LongPressDialog> {
                     onPressed: () async {
                       // await execShell(ToolkitInfo.isRoot,
                       //     "/system/bin/find '${widget.fileNode.path}'");
-                      for (FileNode node in _nodes) {
+                      for (NiFile node in _nodes) {
                         await CustomProcess.exec("rm -rf ${node.path}\n");
                       }
                       showToast2("已删除");
@@ -354,14 +357,14 @@ class _LongPressDialogState extends State<LongPressDialog> {
             setState(() {});
           }),
           item("剪切", Icons.content_cut, () {
-            for (FileNode node in _nodes) {
+            for (NiFile node in _nodes) {
               fiMaPageNotifier.setClipBoard(ClipType.Cut, node.path);
             }
             Navigator.of(context).pop();
             showToast2("已添加至剪切板");
           }),
           item("复制", Icons.content_copy, () async {
-            for (FileNode node in _nodes) {
+            for (NiFile node in _nodes) {
               fiMaPageNotifier.setClipBoard(ClipType.Copy, node.path);
             }
             fiMaPageNotifier.removeAllCheck();
@@ -557,7 +560,7 @@ class _LongPressDialogState extends State<LongPressDialog> {
     //         ),
     //       ),
     //     ][widget.initpage1]
-      // ],
+    // ],
     // ));
   }
 

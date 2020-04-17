@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_icons/octicons.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:flutter_toolkit/main.dart';
 import 'package:flutter_toolkit/utils/global_function.dart';
+import 'package:flutter_toolkit/utils/platform_util.dart';
 import 'package:flutter_toolkit/utils/process.dart';
 import 'package:flutter_toolkit/widgets/public_widgets.dart';
 
@@ -29,6 +32,7 @@ class _FMDrawerState extends State<FMDrawer> {
 
   init() async {
     String result = await CustomProcess.exec("df");
+    File("/storage/emulated/0/MTOOLKIT/Flash/2.txt").writeAsStringSync(result);
     List<String> infos = result.split("\n");
     for (String line in infos) {
       if (line.endsWith("/")) {
@@ -38,7 +42,7 @@ class _FMDrawerState extends State<FMDrawer> {
       }
       if (line.endsWith("/storage/emulated")) {
         sdcardInfo = line.split(RegExp(r"\s{1,}"));
-        print(rootInfo);
+        print(sdcardInfo);
         setState(() {});
       }
     }
@@ -369,8 +373,11 @@ class _MarksItemState extends State<MarksItem>
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  Icon(
-                    Octicons.getIconData("file-directory"),
+                  SvgPicture.asset(
+                    "assets/icon/directory.svg",
+                    width: 20.0,
+                    height: 20.0,
+                    color: Theme.of(context).iconTheme.color,
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

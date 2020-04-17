@@ -1,13 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_toolkit/module/file_manager/io/file.dart';
 import 'package:flutter_toolkit/utils/global_function.dart';
 
 import '../../term/term.dart';
-import '../model/file_node.dart';
 
 class ApkToolDialog extends StatefulWidget {
-  final FileNode fileNode;
+  final NiFile fileNode;
 
   const ApkToolDialog({Key key, @required this.fileNode}) : super(key: key);
   @override
@@ -15,7 +15,7 @@ class ApkToolDialog extends StatefulWidget {
 }
 
 class _ApkToolDialogState extends State<ApkToolDialog> {
-  final FileNode _fileNode;
+  final NiFile _fileNode;
 
   _ApkToolDialogState(this._fileNode);
   Widget apkToolItem(String title, Function onTap) {
